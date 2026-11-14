@@ -15,13 +15,13 @@
   <img src="https://img.shields.io/badge/courses-0%2F8-6f42c1?style=flat-square&amp;labelColor=1f2328" alt="Badge: 0 of 8 courses done" />
   <img src="https://img.shields.io/badge/projects-6-2ea043?style=flat-square&amp;labelColor=1f2328" alt="Badge: 6 projects" />
   <img src="https://img.shields.io/badge/streak-1%20day-db6d28?style=flat-square&amp;labelColor=1f2328" alt="Badge: 1 day current streak" />
-  <img src="https://img.shields.io/badge/commits-1-0969da?style=flat-square&amp;labelColor=1f2328" alt="Badge: 1 commit in total" />
+  <img src="https://img.shields.io/badge/commits-2-0969da?style=flat-square&amp;labelColor=1f2328" alt="Badge: 2 commits in total" />
   <img src="https://img.shields.io/badge/last%20commit-14%20Nov%202026-57606a?style=flat-square&amp;labelColor=1f2328" alt="Badge: last commit 14 Nov 2026" />
 </p>
 
 <p align="center">
-  <sub><strong>0/8 courses</strong> · <strong>6 projects</strong> · <strong>1 day streak</strong> · <strong>1 commit</strong><br />
-  Last commit: 14 Nov 2026 · 21:40 IST · no README editing required</sub>
+  <sub><strong>0/8 courses</strong> · <strong>6 projects</strong> · <strong>1 day streak</strong> · <strong>2 commits</strong><br />
+  Last commit: 14 Nov 2026 · 22:46 IST · no README editing required</sub>
 </p>
 <!--END_SECTION:header-->
 
@@ -87,7 +87,7 @@ flowchart TD
 |:---:|:---:|:---:|
 | **1 day** | **1 day** | **1** |
 | 💬 Commits | ⏱️ Study hours | 🛠️ Fixes |
-| **1** | **0 h** | **0** |
+| **2** | **0 h** | **0** |
 
 <sub>IST days, with a 1-day grace for today. Study hours are optional: put `[1h]` in a commit message if you want them counted. Fixes are commits containing `fix`.</sub>
 <!--END_SECTION:stats-->
