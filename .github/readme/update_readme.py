@@ -360,6 +360,58 @@ def normalize_text(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
 
 
+_GIT_ESCAPES = {
+    "a": 7,
+    "b": 8,
+    "t": 9,
+    "n": 10,
+    "v": 11,
+    "f": 12,
+    "r": 13,
+    "\\": 92,
+    '"': 34,
+}
+
+
+def unquote_git_path(path: str) -> str:
+    """Decode the C-style quoting git uses for unusual path names.
+
+    git always quotes paths containing backslashes, quotes, or control
+    characters even with core.quotePath=false. Without this, a folder like
+    ``rails/back\\slash`` would leak stray quotes into a Markdown table.
+    """
+    path = path.strip()
+    if len(path) < 2 or not (path.startswith('"') and path.endswith('"')):
+        return path
+
+    body = path[1:-1]
+    data = bytearray()
+    index = 0
+    while index < len(body):
+        char = body[index]
+        if char != "\\":
+            data.extend(char.encode("utf-8"))
+            index += 1
+            continue
+        index += 1
+        if index >= len(body):
+            break
+        escape = body[index]
+        if escape in _GIT_ESCAPES:
+            data.append(_GIT_ESCAPES[escape])
+            index += 1
+        elif escape in "01234567":
+            end = index
+            while end < len(body) and end < index + 3 and body[end] in "01234567":
+                end += 1
+            data.append(int(body[index:end], 8) & 0xFF)
+            index = end
+        else:
+            data.extend(escape.encode("utf-8"))
+            index += 1
+    return data.decode("utf-8", "replace")
+
+
 def alias_hit(alias: str, text: str) -> bool:
     """Match an alias as a word, never inside another word.
 
@@ -469,6 +521,7 @@ class State:
     roadmap_version: str = ""
     banner_version: str = ""
     badges_version: str = ""
+    branch: str = "main"
 
     @property
     def courses_done(self) -> int:
@@ -495,6 +548,19 @@ def detect_repo() -> tuple[str, str]:
             return owner, name
 
     return "zeditya", "Odin_RubyOnRails"
+
+
+def detect_branch() -> str:
+    """Default branch for raw image URLs, from Actions env or git."""
+    env_branch = os.environ.get("GITHUB_REF_NAME", "").strip()
+    if env_branch and re.fullmatch(r"[A-Za-z0-9._/-]+", env_branch) and ".." not in env_branch:
+        return env_branch
+
+    branch = run_git("branch", "--show-current", quiet=True).strip()
+    if branch and re.fullmatch(r"[A-Za-z0-9._/-]+", branch) and ".." not in branch:
+        return branch
+
+    return "main"
 
 
 def load_commits() -> list[Commit]:
@@ -536,7 +602,7 @@ def load_commits() -> list[Commit]:
         dt = safe_datetime(ts)
         if dt is None:
             continue
-        files = tuple(line.strip() for line in lines[1:] if line.strip())
+        files = tuple(unquote_git_path(line) for line in lines[1:] if line.strip())
         commits.append(
             Commit(
                 sha=sha,
@@ -685,6 +751,7 @@ def discover_state(commits: list[Commit], today: date, owner: str, name: str) ->
 def build_state() -> State:
     owner, name = detect_repo()
     today = today_ist()
+    branch = detect_branch()
     try:
         commits = load_commits()
     except Exception as exc:
@@ -698,11 +765,13 @@ def build_state() -> State:
             work_folders=[],
             stats=Stats(0, 0, 0, 0, Decimal("0"), 0, None, Counter()),
             critical_error=True,
+            branch=branch,
         )
         return state
 
     try:
         state = discover_state(commits, today, owner, name)
+        state.branch = branch
     except Exception as exc:
         warn(f"could not read course folders: {exc}")
         state = State(
@@ -714,6 +783,7 @@ def build_state() -> State:
             work_folders=[],
             stats=Stats(0, 0, 0, 0, Decimal("0"), 0, None, Counter()),
             critical_error=True,
+            branch=branch,
         )
         return state
 
@@ -727,7 +797,7 @@ def build_state() -> State:
 def asset_url(state: State, filename: str, version: str) -> str:
     return (
         f"https://raw.githubusercontent.com/{state.repo_owner}/{state.repo_name}"
-        f"/main/.github/readme/{filename}?v={version}"
+        f"/{state.branch}/.github/readme/{filename}?v={version}"
     )
 
 
@@ -792,12 +862,13 @@ def build_badges_svg(state: State) -> str:
     widths = [badge_width(label, value) for label, value, _ in items]
     gap = 12
     total_width = sum(widths) + gap * (len(items) - 1)
-    x = max(12, (760 - total_width) // 2)
+    svg_width = max(760, total_width + 24)
+    x = max(12, (svg_width - total_width) // 2)
     y = 8
     height = 40
     pieces = [
         '<?xml version="1.0" encoding="UTF-8"?>',
-        '<svg xmlns="http://www.w3.org/2000/svg" width="760" height="56" viewBox="0 0 760 56" role="img" aria-labelledby="badgesTitle badgesDesc" font-family="system-ui, -apple-system, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_width}" height="56" viewBox="0 0 {svg_width} 56" role="img" aria-labelledby="badgesTitle badgesDesc" font-family="system-ui, -apple-system, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif">',
         f'  <title id="badgesTitle">Learning stats</title>',
         f'  <desc id="badgesDesc">{html_attr(f"{done} of {total} courses · {plural(stats.current_streak, 'day')} streak · {plural(stats.total_commits, 'commit')} · last {last}")}</desc>',
     ]
@@ -834,11 +905,13 @@ def fallback_banner_svg(state: State) -> str:
 def fallback_badges_svg(state: State) -> str:
     stats = state.stats
     text = f"{state.courses_done} of {len(state.courses)} courses · {plural(stats.current_streak, 'day')} streak · {plural(stats.total_commits, 'commit')}"
+    label = f"COURSES {state.courses_done}/{len(state.courses)} · STREAK {plural(stats.current_streak, 'day')} · COMMITS {stats.total_commits}"
+    width = max(760, 48 + int(len(label) * 9.2))
     return f'''<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="56" viewBox="0 0 760 56" role="img" aria-labelledby="badgesTitle badgesDesc">
+<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="56" viewBox="0 0 {width} 56" role="img" aria-labelledby="badgesTitle badgesDesc">
   <title id="badgesTitle">Learning stats</title>
   <desc id="badgesDesc">{html_attr(text)}</desc>
-  <text x="380" y="35" text-anchor="middle" font-size="16" fill="#cbd5e1">{html_attr(f"COURSES {state.courses_done}/{len(state.courses)} · STREAK {plural(stats.current_streak, 'day')} · COMMITS {stats.total_commits}")}</text>
+  <text x="{width // 2}" y="35" text-anchor="middle" font-size="16" fill="#cbd5e1">{html_attr(label)}</text>
 </svg>
 '''
 
@@ -938,10 +1011,14 @@ def build_roadmap_svg(state: State) -> str:
     """
     total = len(state.courses)
     done = state.courses_done
-    width, height = 1200, 920
+    width = 1200
     center_x, top, step = 600, 150, 95
     node_xs = (440, 760)
     points = [(node_xs[index % 2], top + index * step) for index in range(total)]
+    # Grow the canvas with the curriculum so no node or label can ever clip.
+    height = max(920, top + max(total - 1, 0) * step + 104)
+    tail_y = height - 55
+    legend_y = height - 42
 
     route = f"M {center_x} 90"
     prev_x, prev_y = center_x, 90
@@ -952,7 +1029,6 @@ def build_roadmap_svg(state: State) -> str:
             f" {svg_num(x)} {svg_num(y - dy * 0.45)}, {svg_num(x)} {svg_num(y)}"
         )
         prev_x, prev_y = x, y
-    tail_y = 865
     dy = tail_y - prev_y
     route += (
         f" C {svg_num(prev_x)} {svg_num(prev_y + dy * 0.45)},"
@@ -1068,7 +1144,7 @@ def build_roadmap_svg(state: State) -> str:
       <text x="1038" y="52" font-size="12" font-weight="700" letter-spacing="2" fill="#c4b5fd">ROADMAP</text>
     </g>'''
 
-    legend = f'''    <g transform="translate(60, 878)">
+    legend = f'''    <g transform="translate(60, {legend_y})">
       <circle cx="6" cy="-4" r="5" fill="#22c55e" />
       <text x="18" y="0" font-size="13" fill="#94a3b8">Done</text>
       <circle cx="106" cy="-4" r="5" fill="#8b5cf6">
@@ -1078,7 +1154,7 @@ def build_roadmap_svg(state: State) -> str:
       <circle cx="236" cy="-4" r="5" fill="#475569" />
       <text x="248" y="0" font-size="13" fill="#94a3b8">Not started</text>
     </g>
-    <text x="1140" y="878" text-anchor="end" font-size="13" fill="#64748b">{done} / {total} courses complete</text>'''
+    <text x="1140" y="{legend_y}" text-anchor="end" font-size="13" fill="#64748b">{done} / {total} courses complete</text>'''
 
     return f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="roadmapTitle roadmapDesc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
@@ -1094,7 +1170,7 @@ def build_roadmap_svg(state: State) -> str:
       <stop offset="0%" stop-color="#6d28d9" stop-opacity="0.35" />
       <stop offset="100%" stop-color="#6d28d9" stop-opacity="0" />
     </radialGradient>
-    <linearGradient id="routeGradient" gradientUnits="userSpaceOnUse" x1="0" y1="90" x2="0" y2="865">
+    <linearGradient id="routeGradient" gradientUnits="userSpaceOnUse" x1="0" y1="90" x2="0" y2="{tail_y}">
 {gradient_stops}
     </linearGradient>
     <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
@@ -1154,7 +1230,7 @@ def section_roadmap(state: State) -> str:
         raise RuntimeError("roadmap image is unavailable")
     src = (
         f"https://raw.githubusercontent.com/{state.repo_owner}/{state.repo_name}"
-        f"/main/.github/readme/roadmap.svg?v={state.roadmap_version}"
+        f"/{state.branch}/.github/readme/roadmap.svg?v={state.roadmap_version}"
     )
     alt = (
         "Animated roadmap for the Full Stack Ruby on Rails path: "
@@ -1756,12 +1832,14 @@ def validate_readme(
 
 
 def fallback_roadmap_svg(state: State) -> str:
+    width = 1200
+    height = max(200, 110 + max(len(state.courses) - 1, 0) * 42 + 70)
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
-        '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="920" viewBox="0 0 1200 920" role="img" aria-labelledby="roadmapTitle roadmapDesc">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="roadmapTitle roadmapDesc">',
         '  <title id="roadmapTitle">Full Stack Ruby on Rails roadmap</title>',
         f'  <desc id="roadmapDesc">Roadmap for {len(state.courses)} courses.</desc>',
-        '  <rect width="1200" height="920" fill="#0b1120" />',
+        f'  <rect width="{width}" height="{height}" fill="#0b1120" />',
         '  <text x="60" y="60" font-size="24" font-weight="700" fill="#f8fafc">Full Stack Ruby on Rails</text>',
     ]
     for index, course in enumerate(state.courses):
