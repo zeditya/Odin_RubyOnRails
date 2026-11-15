@@ -36,6 +36,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Run test suite
+        run: python3 .github/readme/test_readme.py
+
       - name: Generate README
         run: python3 .github/readme/update_readme.py
 
