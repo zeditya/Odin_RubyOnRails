@@ -9,6 +9,8 @@
 
 <p align="center"><sub>The Odin Project · Learning in public · India (IST)</sub></p>
 
+<p align="center">Learning full-stack Ruby on Rails in public, one course at a time.</p>
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/zeditya/Odin_RubyOnRails/main/.github/readme/badges.svg?v=e84cf757" alt="Badge: 0 of 8 courses done · 2 days streak · 5 commits · last commit 15 Nov 2026" width="100%" />
 </p>
@@ -18,6 +20,24 @@
   <sub>Last commit: 15 Nov 2026 · 09:50 IST</sub>
 </p>
 <!--END_SECTION:header-->
+
+<!--START_SECTION:about-->
+## About
+
+I am learning software development for the first time, in public, through the [Full Stack Ruby on Rails](https://www.theodinproject.com/paths/full-stack-ruby-on-rails) path at The Odin Project. Everything in this repository is real practice: course folders, working code, and progress generated from the git history itself.
+
+### Why Ruby on Rails instead of MERN?
+
+I chose Rails deliberately. This is my first serious track, and I want to spend my time building complete, working products rather than assembling a stack from many separate pieces. Rails is opinionated and batteries-included: routing, the database layer, and the front-end conventions are already in place, so I can move from an idea to a deployed application much faster and start building real projects, and pursuing opportunities, sooner.
+
+MERN is a strong ecosystem, but it asks a beginner to make many architectural decisions up front. I would rather learn one coherent framework deeply first.
+
+### The plan
+
+I will stay on the Ruby on Rails track until I am genuinely strong in it. After that, I will pivot to the JavaScript track (Node, React, and the wider JS ecosystem) and add that stack on top of solid fundamentals. Depth first, breadth second.
+
+Happy building. 🚀
+<!--END_SECTION:about-->
 
 <!--START_SECTION:roadmap-->
 ## Roadmap
@@ -100,3 +120,14 @@ _No work folders yet. Push code inside a course folder and it appears here._
 
 <sub>0/8 courses · best streak 2 days</sub>
 <!--END_SECTION:milestones-->
+
+<!--START_SECTION:connect-->
+## Connect With Me
+
+I am open to internships, junior roles, collaborations, and conversations about Ruby on Rails and full-stack development.
+
+- **GitHub:** [@zeditya](https://github.com/zeditya)
+- **Email:** [adityabahuguna098@gmail.com](mailto:adityabahuguna098@gmail.com)
+
+If you are building something and think I could help, or you have advice for someone learning in public, my inbox is open.
+<!--END_SECTION:connect-->

@@ -52,6 +52,7 @@ IST = timezone(timedelta(hours=5, minutes=30))
 DISPLAY_NAME = "Ruby on Rails"
 JOURNEY_TITLE = "Learning Journey"
 TAGLINE = "The Odin Project · Learning in public · India (IST)"
+REPO_DESCRIPTION = "Learning full-stack Ruby on Rails in public, one course at a time."
 
 # TOP Full Stack Ruby on Rails, in order.
 # aliases = folder names or words in commit messages that point to this course.
@@ -153,12 +154,14 @@ BOT_EMAILS = {
 
 SECTION_ORDER = [
     "header",
+    "about",
     "roadmap",
     "courses",
     "stats",
     "heatmap",
     "recent",
     "milestones",
+    "connect",
 ]
 
 HOURS_RE = re.compile(r"\[(\d+(?:\.\d+)?)\s*h\]", re.IGNORECASE)
@@ -253,12 +256,18 @@ def plural(count: int, singular: str, plural_form: str | None = None) -> str:
 
 
 def md_cell(value: Any) -> str:
-    text = html.escape(clean_text(value), quote=False)
+    text = clean_text(value)
+    for char in ("\\", "`", "*", "_", "~"):
+        text = text.replace(char, "\\" + char)
+    text = html.escape(text, quote=False)
     return text.replace("|", "\\|")
 
 
 def md_text(value: Any) -> str:
-    text = html.escape(clean_text(value), quote=False)
+    text = clean_text(value)
+    for char in ("\\", "`", "*", "_", "~"):
+        text = text.replace(char, "\\" + char)
+    text = html.escape(text, quote=False)
     return text.replace("[", "\\[").replace("]", "\\]").replace("|", "\\|")
 
 
@@ -864,6 +873,8 @@ def section_header(state: State) -> str:
         "",
         f'<p align="center"><sub>{html.escape(TAGLINE)}</sub></p>',
         "",
+        f'<p align="center">{html.escape(REPO_DESCRIPTION)}</p>',
+        "",
         '<p align="center">',
         f'  <img src="{html_attr(badges)}" alt="{html_attr(badge_alt)}" width="100%" />',
         "</p>",
@@ -874,6 +885,44 @@ def section_header(state: State) -> str:
         "</p>",
     ]
     return "\n".join(lines)
+
+
+def section_about(state: State) -> str:
+    return "\n".join(
+        [
+            "## About",
+            "",
+            "I am learning software development for the first time, in public, "
+            "through the [Full Stack Ruby on Rails]"
+            "(https://www.theodinproject.com/paths/full-stack-ruby-on-rails) "
+            "path at The Odin Project. Everything in this repository is real "
+            "practice: course folders, working code, and progress generated "
+            "from the git history itself.",
+            "",
+            "### Why Ruby on Rails instead of MERN?",
+            "",
+            "I chose Rails deliberately. This is my first serious track, and I "
+            "want to spend my time building complete, working products rather "
+            "than assembling a stack from many separate pieces. Rails is "
+            "opinionated and batteries-included: routing, the database layer, "
+            "and the front-end conventions are already in place, so I can move "
+            "from an idea to a deployed application much faster and start "
+            "building real projects, and pursuing opportunities, sooner.",
+            "",
+            "MERN is a strong ecosystem, but it asks a beginner to make many "
+            "architectural decisions up front. I would rather learn one "
+            "coherent framework deeply first.",
+            "",
+            "### The plan",
+            "",
+            "I will stay on the Ruby on Rails track until I am genuinely strong "
+            "in it. After that, I will pivot to the JavaScript track (Node, "
+            "React, and the wider JS ecosystem) and add that stack on top of "
+            "solid fundamentals. Depth first, breadth second.",
+            "",
+            "Happy building. 🚀",
+        ]
+    )
 
 
 def svg_num(value: float) -> str:
@@ -1270,14 +1319,34 @@ def section_milestones(state: State) -> str:
     return "\n".join(lines)
 
 
+def section_connect(state: State) -> str:
+    return "\n".join(
+        [
+            "## Connect With Me",
+            "",
+            "I am open to internships, junior roles, collaborations, and "
+            "conversations about Ruby on Rails and full-stack development.",
+            "",
+            "- **GitHub:** [@zeditya](https://github.com/zeditya)",
+            "- **Email:** [adityabahuguna098@gmail.com]"
+            "(mailto:adityabahuguna098@gmail.com)",
+            "",
+            "If you are building something and think I could help, or you have "
+            "advice for someone learning in public, my inbox is open.",
+        ]
+    )
+
+
 SECTION_BUILDERS: dict[str, Callable[[State], str]] = {
     "header": section_header,
+    "about": section_about,
     "roadmap": section_roadmap,
     "courses": section_courses,
     "stats": section_stats,
     "heatmap": section_heatmap,
     "recent": section_recent,
     "milestones": section_milestones,
+    "connect": section_connect,
 }
 
 # ---------------------------------------------------------------------------
@@ -1285,12 +1354,14 @@ SECTION_BUILDERS: dict[str, Callable[[State], str]] = {
 # ---------------------------------------------------------------------------
 
 HEADINGS = {
+    "about": "About",
     "roadmap": "Roadmap",
     "courses": "Course Progress",
     "stats": "Stats",
     "heatmap": "Activity",
     "recent": "Recent Work",
     "milestones": "Milestones",
+    "connect": "Connect With Me",
 }
 
 
@@ -1462,6 +1533,8 @@ def heading_errors(name: str, body: str) -> list[str]:
             errors.append("header has no banner image")
         if "badges.svg?v=" not in body:
             errors.append("header has no badges image")
+        if REPO_DESCRIPTION not in body:
+            errors.append("header has no repository description")
         return errors
 
     first = next((line.strip() for line in body.splitlines() if line.strip()), "")
@@ -1488,6 +1561,18 @@ def heading_errors(name: str, body: str) -> list[str]:
         boxes = sum(1 for line in body.splitlines() if re.match(r"^- \[[ x]\] ", line))
         if boxes < len(COURSES):
             errors.append("is missing course milestones")
+    elif name == "about":
+        if "Rails" not in body:
+            errors.append("does not mention Ruby on Rails")
+        if "MERN" not in body:
+            errors.append("does not explain the MERN comparison")
+        if "JavaScript" not in body:
+            errors.append("does not mention the JavaScript pivot")
+    elif name == "connect":
+        if "https://github.com/" not in body:
+            errors.append("has no GitHub link")
+        if "mailto:" not in body:
+            errors.append("has no email link")
     return errors
 
 
@@ -1661,7 +1746,10 @@ def validate_readme(
         else:
             errors.append(f"unknown asset {filename!r}")
         version = hashlib.sha256(content.encode("utf-8")).hexdigest()[:8]
-        if f"{filename}?v={version}" not in text:
+        needle = f'{filename}?v={version}"'
+        if text.count(f"{filename}?v={version}") != 1:
+            errors.append(f"README must reference {filename} exactly once")
+        if needle not in text:
             errors.append(f"README {filename} version does not match the file")
 
     return errors
@@ -1700,6 +1788,8 @@ def fallback_body(name: str, state: State) -> str:
                 f'<h1 align="center">{html.escape(JOURNEY_TITLE)}</h1>',
                 "",
                 f'<p align="center"><sub>{html.escape(TAGLINE)}</sub></p>',
+                "",
+                f'<p align="center">{html.escape(REPO_DESCRIPTION)}</p>',
                 "",
                 '<p align="center">',
                 f'  <img src="{html_attr(badges)}" alt="Learning stats" width="100%" />',
@@ -1760,6 +1850,31 @@ def fallback_body(name: str, state: State) -> str:
         for milestone in MILESTONE_STREAKS:
             lines.append(f"- [ ] {milestone}-day streak")
         return "\n".join(lines)
+    if name == "about":
+        return "\n".join(
+            [
+                "## About",
+                "",
+                "I am learning software development for the first time, in "
+                "public, through The Odin Project Full Stack Ruby on Rails "
+                "path. I chose Rails over MERN because I want to build real "
+                "projects and pursue opportunities as soon as possible. After "
+                "becoming genuinely strong in Rails, I will pivot to the "
+                "JavaScript track.",
+                "",
+                "Happy building. 🚀",
+            ]
+        )
+    if name == "connect":
+        return "\n".join(
+            [
+                "## Connect With Me",
+                "",
+                "- **GitHub:** [@zeditya](https://github.com/zeditya)",
+                "- **Email:** [adityabahuguna098@gmail.com]"
+                "(mailto:adityabahuguna098@gmail.com)",
+            ]
+        )
     raise RuntimeError(f"unknown section {name!r}")
 
 

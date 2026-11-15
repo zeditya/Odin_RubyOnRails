@@ -3,11 +3,6 @@ name: Update README
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - README.md
-      - .github/readme/roadmap.svg
-      - .github/readme/banner.svg
-      - .github/readme/badges.svg
   schedule:
     # 00:00 IST (UTC+5:30) every day.
     - cron: "30 18 * * *"
@@ -22,6 +17,12 @@ concurrency:
 
 jobs:
   update:
+    # Do not loop on the bot's own commit, but do run when a human edits only
+    # README.md so a manual change is repaired immediately.
+    if: >-
+      github.event_name != 'push'
+      || (github.actor != 'github-actions[bot]'
+      && !contains(github.event.head_commit.message || '', '[skip ci]'))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
