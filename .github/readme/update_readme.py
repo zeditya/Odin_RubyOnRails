@@ -678,6 +678,15 @@ def discover_state(commits: list[Commit], today: date, owner: str, name: str) ->
                 course.folders[rel] = max(course.folders.get(rel, 0), commit.ts)
                 course.last_ts = max(course.last_ts, commit.ts)
 
+    # Ignore folders that no longer exist, so a rename or deletion cannot
+    # inflate progress or pin an old folder in Recent Work.
+    for course in courses:
+        course.folders = {
+            rel: ts
+            for rel, ts in course.folders.items()
+            if (ROOT / rel).is_dir()
+        }
+
     # The highest course with activity is "current". Earlier active courses are done.
     active = [course for course in courses if course.commits]
     frontier = max((course.index for course in active), default=-1)
@@ -740,7 +749,12 @@ def discover_state(commits: list[Commit], today: date, owner: str, name: str) ->
         date_counts=date_counts,
     )
 
-    folders = sorted(folder_map.values(), key=lambda item: (-item.last_ts, item.rel))
+    folders = [
+        folder
+        for folder in folder_map.values()
+        if (ROOT / folder.rel).is_dir()
+    ]
+    folders.sort(key=lambda item: (-item.last_ts, item.rel))
     return State(
         today=today,
         repo_owner=owner,
