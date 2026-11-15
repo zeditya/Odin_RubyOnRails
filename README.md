@@ -11,14 +11,14 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/courses-0%2F8-6d28d9?style=flat-square&amp;labelColor=1f2328" alt="Badge: 0 of 8 courses done" />
-  <img src="https://img.shields.io/badge/streak-1%20day-2563eb?style=flat-square&amp;labelColor=1f2328" alt="Badge: 1 day current streak" />
-  <img src="https://img.shields.io/badge/commits-2-0f766e?style=flat-square&amp;labelColor=1f2328" alt="Badge: 2 commits in total" />
-  <img src="https://img.shields.io/badge/last%20commit-14%20Nov%202026-475569?style=flat-square&amp;labelColor=1f2328" alt="Badge: last commit 14 Nov 2026" />
+  <img src="https://img.shields.io/badge/streak-2%20days-2563eb?style=flat-square&amp;labelColor=1f2328" alt="Badge: 2 days current streak" />
+  <img src="https://img.shields.io/badge/commits-3-0f766e?style=flat-square&amp;labelColor=1f2328" alt="Badge: 3 commits in total" />
+  <img src="https://img.shields.io/badge/last%20commit-15%20Nov%202026-475569?style=flat-square&amp;labelColor=1f2328" alt="Badge: last commit 15 Nov 2026" />
 </p>
 
 <p align="center">
   <strong>Currently learning:</strong> Getting started<br />
-  <sub>Last commit: 14 Nov 2026 · 22:46 IST</sub>
+  <sub>Last commit: 15 Nov 2026 · 09:20 IST</sub>
 </p>
 <!--END_SECTION:header-->
 
@@ -80,9 +80,9 @@ flowchart TD
 
 | Current streak | Best streak | Active days |
 |:---:|:---:|:---:|
-| **1 day** | **1 day** | **1** |
+| **2 days** | **2 days** | **2** |
 | Commits | Study hours | Fixes |
-| **2** | **0 h** | **0** |
+| **3** | **0 h** | **0** |
 
 <sub>IST days, with a one-day grace for today. Add `[1h]` to a commit message to count study hours. Fixes are commits containing `fix`.</sub>
 <!--END_SECTION:stats-->
@@ -99,7 +99,7 @@ Wed  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 Thu  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 Fri  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 Sat  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🟩
-Sun  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+Sun  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🟩
 ```
 
 <sub>⬜ none · 🟩 1–2 commits · 🟨 3–5 · 🟧 6+ · `·` future · one cell = one IST day</sub>
@@ -129,5 +129,5 @@ _No work folders yet. Push code inside a course folder and it appears here._
 - [ ] 30-day streak
 - [ ] 100-day streak
 
-<sub>0/8 courses · best streak 1 day</sub>
+<sub>0/8 courses · best streak 2 days</sub>
 <!--END_SECTION:milestones-->
