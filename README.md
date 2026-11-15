@@ -12,12 +12,12 @@
 <p align="center">Learning full-stack Ruby on Rails in public, one course at a time.</p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/zeditya/Odin_RubyOnRails/main/.github/readme/badges.svg?v=e3e6d9e4" alt="Badge: 0 of 8 courses done · 2 days streak · 8 commits · last commit 15 Nov 2026" width="100%" />
+  <img src="https://raw.githubusercontent.com/zeditya/Odin_RubyOnRails/main/.github/readme/badges.svg?v=bc6572f3" alt="Badge: 0 of 8 courses done · 2 days streak · 9 commits · last commit 15 Nov 2026" width="100%" />
 </p>
 
 <p align="center">
   <strong>Currently learning:</strong> Getting started<br />
-  <sub>Last commit: 15 Nov 2026 · 10:11 IST</sub>
+  <sub>Last commit: 15 Nov 2026 · 10:18 IST</sub>
 </p>
 <!--END_SECTION:header-->
 
@@ -71,7 +71,7 @@ Happy building. 🚀
 |:---:|:---:|:---:|
 | **2 days** | **2 days** | **2** |
 | Commits | Study hours | Fixes |
-| **8** | **0 h** | **0** |
+| **9** | **0 h** | **0** |
 
 <sub>IST days, with a one-day grace for today. Add `[1h]` to a commit message to count study hours. Fixes are commits containing `fix`.</sub>
 <!--END_SECTION:stats-->
