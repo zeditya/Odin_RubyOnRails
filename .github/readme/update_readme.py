@@ -235,6 +235,8 @@ def fmt_ts(ts: int) -> str:
 def fmt_hours(value: Decimal) -> str:
     if not value.is_finite() or value <= 0:
         return "0"
+    if value > Decimal("100000"):
+        return "100000+"
     text = format(value.normalize(), "f")
     return text.rstrip("0").rstrip(".") if "." in text else text
 
@@ -588,7 +590,8 @@ def load_commits() -> list[Commit]:
         header = lines[0].split("\x1f")
         if len(header) < 5:
             continue
-        sha, ts_raw, author_name, author_email, subject = header[:5]
+        sha, ts_raw, author_name, author_email = header[:4]
+        subject = "\x1f".join(header[4:])
         if (
             author_name.strip() in BOT_NAMES
             or author_email.strip().lower() in BOT_EMAILS
@@ -1065,6 +1068,8 @@ def build_roadmap_svg(state: State) -> str:
         label_x = 820 if label_right else 380
         anchor = "start" if label_right else "end"
         name_fill = "#f8fafc" if course.status != "todo" else "#94a3b8"
+        # Keep long titles inside the label column instead of overlapping.
+        name_size = 20 if len(course.name) <= 28 else max(12, int(20 * 28 / max(len(course.name), 1)))
 
         if course.status == "done":
             status_label = "COMPLETE"
@@ -1116,7 +1121,7 @@ def build_roadmap_svg(state: State) -> str:
 
         parts.extend(
             [
-                f'    <text x="{label_x}" y="{y - 16}" text-anchor="{anchor}" font-size="20" font-weight="700" fill="{name_fill}">{html_attr(course.name)}</text>',
+                f'    <text x="{label_x}" y="{y - 16}" text-anchor="{anchor}" font-size="{name_size}" font-weight="700" fill="{name_fill}">{html_attr(course.name)}</text>',
                 f'    <text x="{label_x}" y="{y + 6}" text-anchor="{anchor}" font-size="11.5" font-weight="700" letter-spacing="1.4" fill="{style["text"]}">{status_label}</text>',
                 f'    <text x="{label_x}" y="{y + 28}" text-anchor="{anchor}" font-size="13" fill="#94a3b8">{progress_text}</text>',
             ]
@@ -1752,8 +1757,8 @@ def validate_roadmap_svg(svg: str, state: State | None = None) -> list[str]:
         Course(index=index, cfg=cfg, path=None) for index, cfg in enumerate(COURSES)
     ]
     for course in courses:
-        if course.name not in labels:
-            errors.append(f"SVG is missing course {course.name!r}")
+        if course.name.strip() not in labels:
+            errors.append(f"SVG is missing course {course.name.strip()!r}")
     return errors
 
 
