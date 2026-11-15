@@ -17,6 +17,7 @@ Python 3 standard library only.
 
 from __future__ import annotations
 
+import hashlib
 import html
 import os
 import re
@@ -36,12 +37,13 @@ from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[2]
 README_FILE = ROOT / "README.md"
+ROADMAP_FILE = ROOT / ".github" / "readme" / "roadmap.svg"
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
 # Simple, personal heading shown at the top of the README.
-DISPLAY_NAME = "Aditya Bahuguna"
-JOURNEY_TITLE = "Ruby on Rails Journey"
+DISPLAY_NAME = "Ruby on Rails"
+JOURNEY_TITLE = "Learning Journey"
 TAGLINE = "The Odin Project · Learning in public · India (IST)"
 
 # TOP Full Stack Ruby on Rails, in order.
@@ -125,6 +127,13 @@ IGNORED_WORK_SUBDIRS = {
     "tmp",
     "vendor",
     "coverage",
+}
+
+# Colours used by the animated roadmap image.
+STATUS_STYLE = {
+    "done": {"fill": "#22c55e", "text": "#4ade80"},
+    "active": {"fill": "#8b5cf6", "text": "#c4b5fd"},
+    "todo": {"fill": "#475569", "text": "#94a3b8"},
 }
 
 MILESTONE_STREAKS = (7, 30, 100)
@@ -397,6 +406,7 @@ class State:
     work_folders: list[WorkFolder]
     stats: Stats
     critical_error: bool = False
+    roadmap_version: str = ""
 
     @property
     def courses_done(self) -> int:
@@ -708,32 +718,250 @@ def section_header(state: State) -> str:
     return "\n".join(lines)
 
 
+def svg_num(value: float) -> str:
+    text = f"{value:.1f}"
+    return text[:-2] if text.endswith(".0") else text
+
+
+def build_roadmap_svg(state: State) -> str:
+    """Build a self-contained animated SVG roadmap.
+
+    The animation uses SMIL only (no scripts, no external assets), so GitHub can
+    render it inside a normal README image tag.
+    """
+    total = len(state.courses)
+    done = state.courses_done
+    width, height = 1200, 920
+    center_x, top, step = 600, 150, 95
+    node_xs = (440, 760)
+    points = [(node_xs[index % 2], top + index * step) for index in range(total)]
+
+    route = f"M {center_x} 90"
+    prev_x, prev_y = center_x, 90
+    for x, y in points:
+        dy = y - prev_y
+        route += (
+            f" C {svg_num(prev_x)} {svg_num(prev_y + dy * 0.45)},"
+            f" {svg_num(x)} {svg_num(y - dy * 0.45)}, {svg_num(x)} {svg_num(y)}"
+        )
+        prev_x, prev_y = x, y
+    tail_y = 865
+    dy = tail_y - prev_y
+    route += (
+        f" C {svg_num(prev_x)} {svg_num(prev_y + dy * 0.45)},"
+        f" {svg_num(center_x)} {svg_num(tail_y - dy * 0.45)}, {center_x} {tail_y}"
+    )
+
+    if total and done == total:
+        stops = [(0, "#22c55e"), (100, "#4ade80")]
+    elif done:
+        active = next((course for course in state.courses if course.status == "active"), None)
+        frontier = (active.index if active else total - 1) / max(total - 1, 1)
+        stops = [
+            (0, "#22c55e"),
+            (int(max(8, min(92, frontier * 100))), "#8b5cf6"),
+            (100, "#334155"),
+        ]
+    else:
+        stops = [(0, "#6366f1"), (55, "#8b5cf6"), (100, "#334155")]
+    gradient_stops = "\n".join(
+        f'      <stop offset="{offset}%" stop-color="{color}" />'
+        for offset, color in stops
+    )
+
+    status_words = {"done": "done", "active": "in progress", "todo": "not started"}
+    description = ". ".join(
+        f"{course.name}: {status_words[course.status]}" for course in state.courses
+    )
+
+    nodes: list[str] = []
+    for index, course in enumerate(state.courses):
+        x, y = points[index]
+        style = STATUS_STYLE[course.status]
+        label_right = index % 2 == 1
+        label_x = 820 if label_right else 380
+        anchor = "start" if label_right else "end"
+        name_fill = "#f8fafc" if course.status != "todo" else "#94a3b8"
+
+        if course.status == "done":
+            status_label = "COMPLETE"
+            progress_text = "100% · complete"
+        elif course.status == "active":
+            status_label = "IN PROGRESS"
+            folder_word = "folder" if course.total_folders == 1 else "folders"
+            progress_text = (
+                f"{int(round(course.progress * 100))}% · "
+                f"{course.done_folders} of {course.total_folders} {folder_word} done"
+            )
+        else:
+            status_label = "NOT STARTED"
+            progress_text = "0%"
+
+        parts = [
+            f'    <circle cx="{x}" cy="{y}" r="30" fill="{style["fill"]}" opacity="0.12" filter="url(#blur)" />'
+        ]
+        if course.status == "active":
+            parts.extend(
+                [
+                    f'    <circle cx="{x}" cy="{y}" r="20" fill="none" stroke="{style["fill"]}" stroke-width="2">',
+                    '      <animate attributeName="r" values="20;36;20" dur="3s" repeatCount="indefinite" />',
+                    '      <animate attributeName="opacity" values="0.65;0;0.65" dur="3s" repeatCount="indefinite" />',
+                    "    </circle>",
+                    f'    <circle cx="{x}" cy="{y}" r="29" fill="none" stroke="{style["text"]}" stroke-width="1.3" stroke-dasharray="4 7" opacity="0.55">',
+                    f'      <animateTransform attributeName="transform" type="rotate" from="0 {x} {y}" to="360 {x} {y}" dur="14s" repeatCount="indefinite" />',
+                    "    </circle>",
+                ]
+            )
+        parts.extend(
+            [
+                f'    <circle cx="{x}" cy="{y}" r="20" fill="#0b1120" stroke="{style["fill"]}" stroke-width="3" />',
+                f'    <circle cx="{x}" cy="{y}" r="13" fill="{style["fill"]}" />',
+            ]
+        )
+        if course.status == "done":
+            parts.append(
+                f'    <path d="M {x - 7} {y} L {x - 2} {y + 5} L {x + 8} {y - 6}" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />'
+            )
+        elif course.status == "active":
+            parts.append(
+                f'    <path d="M {x - 4} {y - 6} L {x + 6} {y} L {x - 4} {y + 6} Z" fill="#ffffff" />'
+            )
+        else:
+            parts.append(
+                f'    <text x="{x}" y="{y + 4}" text-anchor="middle" font-size="12" font-weight="700" fill="#cbd5e1">{index + 1}</text>'
+            )
+
+        parts.extend(
+            [
+                f'    <text x="{label_x}" y="{y - 16}" text-anchor="{anchor}" font-size="20" font-weight="700" fill="{name_fill}">{html_attr(course.name)}</text>',
+                f'    <text x="{label_x}" y="{y + 6}" text-anchor="{anchor}" font-size="11.5" font-weight="700" letter-spacing="1.4" fill="{style["text"]}">{status_label}</text>',
+                f'    <text x="{label_x}" y="{y + 28}" text-anchor="{anchor}" font-size="13" fill="#94a3b8">{progress_text}</text>',
+            ]
+        )
+        if course.status == "active":
+            bar_x = label_x - 180 if anchor == "end" else label_x
+            bar_width = 180 * max(0.0, min(1.0, course.progress))
+            parts.extend(
+                [
+                    f'    <rect x="{bar_x}" y="{y + 38}" width="180" height="6" rx="3" fill="#1e293b" />',
+                    f'    <rect x="{bar_x}" y="{y + 38}" width="{svg_num(bar_width)}" height="6" rx="3" fill="url(#barGradient)">',
+                    f'      <animate attributeName="width" from="0" to="{svg_num(bar_width)}" dur="1.2s" fill="freeze" />',
+                    "    </rect>",
+                ]
+            )
+        nodes.append("\n".join(parts))
+
+    header = f'''    <text x="60" y="54" font-size="22" font-weight="700" fill="#f8fafc">Full Stack Ruby on Rails</text>
+    <text x="60" y="80" font-size="14" fill="#94a3b8">{total} courses · {done} complete</text>
+    <g>
+      <rect x="1002" y="30" width="138" height="34" rx="17" fill="#111827" stroke="#334155" />
+      <circle cx="1024" cy="47" r="4" fill="#a78bfa">
+        <animate attributeName="opacity" values="1;0.25;1" dur="2s" repeatCount="indefinite" />
+      </circle>
+      <text x="1038" y="52" font-size="12" font-weight="700" letter-spacing="2" fill="#c4b5fd">ROADMAP</text>
+    </g>'''
+
+    legend = f'''    <g transform="translate(60, 878)">
+      <circle cx="6" cy="-4" r="5" fill="#22c55e" />
+      <text x="18" y="0" font-size="13" fill="#94a3b8">Done</text>
+      <circle cx="106" cy="-4" r="5" fill="#8b5cf6">
+        <animate attributeName="opacity" values="1;0.35;1" dur="2.4s" repeatCount="indefinite" />
+      </circle>
+      <text x="118" y="0" font-size="13" fill="#94a3b8">In progress</text>
+      <circle cx="236" cy="-4" r="5" fill="#475569" />
+      <text x="248" y="0" font-size="13" fill="#94a3b8">Not started</text>
+    </g>
+    <text x="1140" y="878" text-anchor="end" font-size="13" fill="#64748b">{done} / {total} courses complete</text>'''
+
+    return f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="roadmapTitle roadmapDesc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title id="roadmapTitle">Animated roadmap for the Full Stack Ruby on Rails path</title>
+  <desc id="roadmapDesc">{html_attr(description)}</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1120" />
+      <stop offset="55%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+    <radialGradient id="halo" cx="75%" cy="15%" r="65%">
+      <stop offset="0%" stop-color="#6d28d9" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#6d28d9" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="routeGradient" gradientUnits="userSpaceOnUse" x1="0" y1="90" x2="0" y2="865">
+{gradient_stops}
+    </linearGradient>
+    <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#c4b5fd" />
+    </linearGradient>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.5" r="1.1" fill="#ffffff" fill-opacity="0.035" />
+    </pattern>
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" />
+    </filter>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="3" result="blurred" />
+      <feMerge>
+        <feMergeNode in="blurred" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <clipPath id="frame">
+      <rect width="{width}" height="{height}" rx="26" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="{width}" height="{height}" rx="26" fill="url(#bg)" />
+    <rect width="{width}" height="{height}" rx="26" fill="url(#dots)" />
+    <rect width="{width}" height="{height}" rx="26" fill="url(#halo)" />
+    <path d="{route}" fill="none" stroke="#8b5cf6" stroke-width="18" opacity="0.12" filter="url(#blur)" />
+    <path id="route" d="{route}" fill="none" stroke="url(#routeGradient)" stroke-width="4" stroke-linecap="round" />
+    <path d="{route}" fill="none" stroke="#e2e8f0" stroke-width="2.5" stroke-dasharray="8 14" opacity="0.35" stroke-linecap="round">
+      <animate attributeName="stroke-dashoffset" values="0;-44" dur="1.4s" repeatCount="indefinite" />
+    </path>
+    <g>
+      <circle r="14" fill="#a78bfa" opacity="0.2" filter="url(#blur)" />
+      <circle r="5" fill="#e9d5ff" filter="url(#glow)" />
+      <animateMotion dur="10s" repeatCount="indefinite" rotate="auto">
+        <mpath xlink:href="#route" />
+      </animateMotion>
+    </g>
+{chr(10).join(nodes)}
+{header}
+{legend}
+  </g>
+  <rect x="1" y="1" width="{width - 2}" height="{height - 2}" rx="25" fill="none" stroke="#334155" stroke-opacity="0.7" stroke-width="1.5" />
+</svg>
+'''
+
+
+def write_roadmap(state: State) -> str:
+    svg = build_roadmap_svg(state)
+    write_atomic(ROADMAP_FILE, svg)
+    return hashlib.sha256(svg.encode("utf-8")).hexdigest()[:8]
+
+
 def section_roadmap(state: State) -> str:
-    class_for = {"done": "done", "active": "current", "todo": "todo"}
-    lines = ["## Roadmap", "", "```mermaid", "flowchart TD"]
-    for course in state.courses:
-        node = f"C{course.index + 1:02d}"
-        label = course.name.replace('"', "'")
-        lines.append(f'  {node}["{label}"]')
-    for course in state.courses[:-1]:
-        lines.append(f"  C{course.index + 1:02d} --> C{course.index + 2:02d}")
-    lines.extend(
-        [
-            "  classDef done fill:#166534,stroke:#22c55e,color:#ffffff,stroke-width:2px",
-            "  classDef current fill:#6d28d9,stroke:#a78bfa,color:#ffffff,stroke-width:2px",
-            "  classDef todo fill:#334155,stroke:#64748b,color:#ffffff,stroke-width:2px",
-        ]
+    if not state.roadmap_version:
+        raise RuntimeError("roadmap image is unavailable")
+    src = (
+        f"https://raw.githubusercontent.com/{state.repo_owner}/{state.repo_name}"
+        f"/main/.github/readme/roadmap.svg?v={state.roadmap_version}"
     )
-    for course in state.courses:
-        lines.append(f"  class C{course.index + 1:02d} {class_for[course.status]}")
-    lines.extend(
+    alt = (
+        "Animated roadmap for the Full Stack Ruby on Rails path: "
+        f"{state.courses_done} of {len(state.courses)} courses complete."
+    )
+    return "\n".join(
         [
-            "```",
+            "## Roadmap",
             "",
-            "<sub>✅ Done · 🚧 In progress · ⬜ Not started</sub>",
+            '<p align="center">',
+            f'  <img src="{html_attr(src)}" alt="{html_attr(alt)}" width="100%" />',
+            "</p>",
         ]
     )
-    return "\n".join(lines)
 
 
 def section_courses(state: State) -> str:
@@ -947,6 +1175,11 @@ def main() -> int:
             return 0
         warn("no previous README to preserve")
         return 1
+
+    try:
+        state.roadmap_version = write_roadmap(state)
+    except Exception as exc:
+        warn(f"could not write roadmap image: {exc}")
 
     updated: list[str] = []
     kept: list[str] = []

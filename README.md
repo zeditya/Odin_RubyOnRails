@@ -2,10 +2,10 @@
 
 <!--START_SECTION:header-->
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&amp;color=0:0f172a,50:6d28d9,100:2563eb&amp;height=180&amp;section=header&amp;text=Aditya%20Bahuguna&amp;fontSize=42&amp;fontColor=ffffff&amp;fontAlignY=50&amp;animation=fadeIn" alt="Banner: Aditya Bahuguna" width="100%" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&amp;color=0:0f172a,50:6d28d9,100:2563eb&amp;height=180&amp;section=header&amp;text=Ruby%20on%20Rails&amp;fontSize=42&amp;fontColor=ffffff&amp;fontAlignY=50&amp;animation=fadeIn" alt="Banner: Ruby on Rails" width="100%" />
 </p>
 
-<h1 align="center">Ruby on Rails Journey</h1>
+<h1 align="center">Learning Journey</h1>
 
 <p align="center"><sub>The Odin Project · Learning in public · India (IST)</sub></p>
 
@@ -25,37 +25,9 @@
 <!--START_SECTION:roadmap-->
 ## Roadmap
 
-```mermaid
-flowchart TD
-  C01["Ruby"]
-  C02["Intermediate HTML and CSS"]
-  C03["Databases"]
-  C04["Ruby on Rails"]
-  C05["Advanced HTML and CSS"]
-  C06["JavaScript"]
-  C07["React"]
-  C08["Getting Hired"]
-  C01 --> C02
-  C02 --> C03
-  C03 --> C04
-  C04 --> C05
-  C05 --> C06
-  C06 --> C07
-  C07 --> C08
-  classDef done fill:#166534,stroke:#22c55e,color:#ffffff,stroke-width:2px
-  classDef current fill:#6d28d9,stroke:#a78bfa,color:#ffffff,stroke-width:2px
-  classDef todo fill:#334155,stroke:#64748b,color:#ffffff,stroke-width:2px
-  class C01 todo
-  class C02 todo
-  class C03 todo
-  class C04 todo
-  class C05 todo
-  class C06 todo
-  class C07 todo
-  class C08 todo
-```
-
-<sub>✅ Done · 🚧 In progress · ⬜ Not started</sub>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/zeditya/Odin_RubyOnRails/main/.github/readme/roadmap.svg?v=ac86e02f" alt="Animated roadmap for the Full Stack Ruby on Rails path: 0 of 8 courses complete." width="100%" />
+</p>
 <!--END_SECTION:roadmap-->
 
 <!--START_SECTION:courses-->
