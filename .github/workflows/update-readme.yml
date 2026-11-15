@@ -6,6 +6,8 @@ on:
     paths-ignore:
       - README.md
       - .github/readme/roadmap.svg
+      - .github/readme/banner.svg
+      - .github/readme/badges.svg
   schedule:
     # 00:00 IST (UTC+5:30) every day.
     - cron: "30 18 * * *"
@@ -36,29 +38,63 @@ jobs:
       - name: Generate README
         run: python3 .github/readme/update_readme.py
 
+      - name: Validate generated files
+        run: python3 .github/readme/update_readme.py --check
+
       - name: Commit only when the README changed
         shell: bash
         run: |
           set -euo pipefail
 
-          if [ -z "$(git status --porcelain -- README.md .github/readme/roadmap.svg)" ]; then
-            echo "README and roadmap are unchanged. Nothing to commit."
+          test -s README.md
+          test -s .github/readme/roadmap.svg
+          test -s .github/readme/banner.svg
+          test -s .github/readme/badges.svg
+
+          if [ -z "$(git status --porcelain -- README.md .github/readme/roadmap.svg .github/readme/banner.svg .github/readme/badges.svg)" ]; then
+            echo "README and images are unchanged. Nothing to commit."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add README.md .github/readme/roadmap.svg
+          git add README.md .github/readme/roadmap.svg .github/readme/banner.svg .github/readme/badges.svg
           git commit -m "docs: auto-update README [skip ci]"
 
           # Rebase before every push. Retry because another push may land first.
           for attempt in 1 2 3; do
             if ! git pull --rebase origin "${GITHUB_REF_NAME}"; then
               git rebase --abort || true
+              # Remote changed under us. Rebuild from the remote tip instead of
+              # ever forcing a conflicted or broken README.
+              git fetch origin "${GITHUB_REF_NAME}"
+              git reset --hard "origin/${GITHUB_REF_NAME}"
+              python3 .github/readme/update_readme.py
+              python3 .github/readme/update_readme.py --check
+              git add README.md .github/readme/roadmap.svg .github/readme/banner.svg .github/readme/badges.svg
+              if git diff --cached --quiet; then
+                echo "Nothing to push after rebase."
+                exit 0
+              fi
+              git commit -m "docs: auto-update README [skip ci]"
               sleep 3
               continue
             fi
+
+            # Never push files that fail the structural check, even after a rebase.
+            if ! python3 .github/readme/update_readme.py --check; then
+              echo "Generated files need repair after rebase; regenerating." >&2
+              python3 .github/readme/update_readme.py
+              if ! python3 .github/readme/update_readme.py --check; then
+                echo "Generated files still failed validation after repair." >&2
+                git reset --hard "origin/${GITHUB_REF_NAME}" || true
+                exit 1
+              fi
+              git add README.md .github/readme/roadmap.svg .github/readme/banner.svg .github/readme/badges.svg
+              git commit --amend --no-edit
+            fi
+
             if git push origin "HEAD:${GITHUB_REF_NAME}"; then
               exit 0
             fi

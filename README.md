@@ -2,7 +2,7 @@
 
 <!--START_SECTION:header-->
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&amp;color=0:0f172a,50:6d28d9,100:2563eb&amp;height=180&amp;section=header&amp;text=Ruby%20on%20Rails&amp;fontSize=42&amp;fontColor=ffffff&amp;fontAlignY=50&amp;animation=fadeIn" alt="Banner: Ruby on Rails" width="100%" />
+  <img src="https://raw.githubusercontent.com/zeditya/Odin_RubyOnRails/main/.github/readme/banner.svg?v=07324c22" alt="Banner: Ruby on Rails" width="100%" />
 </p>
 
 <h1 align="center">Learning Journey</h1>
@@ -10,10 +10,7 @@
 <p align="center"><sub>The Odin Project · Learning in public · India (IST)</sub></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/courses-0%2F8-6d28d9?style=flat-square&amp;labelColor=1f2328" alt="Badge: 0 of 8 courses done" />
-  <img src="https://img.shields.io/badge/streak-2%20days-2563eb?style=flat-square&amp;labelColor=1f2328" alt="Badge: 2 days current streak" />
-  <img src="https://img.shields.io/badge/commits-4-0f766e?style=flat-square&amp;labelColor=1f2328" alt="Badge: 4 commits in total" />
-  <img src="https://img.shields.io/badge/last%20commit-15%20Nov%202026-475569?style=flat-square&amp;labelColor=1f2328" alt="Badge: last commit 15 Nov 2026" />
+  <img src="https://raw.githubusercontent.com/zeditya/Odin_RubyOnRails/main/.github/readme/badges.svg?v=fbd5442c" alt="Badge: 0 of 8 courses done · 2 days streak · 4 commits · last commit 15 Nov 2026" width="100%" />
 </p>
 
 <p align="center">
