@@ -10,12 +10,12 @@
 <p align="center"><sub>The Odin Project · Learning in public · India (IST)</sub></p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/zeditya/Odin_RubyOnRails/main/.github/readme/badges.svg?v=fbd5442c" alt="Badge: 0 of 8 courses done · 2 days streak · 4 commits · last commit 15 Nov 2026" width="100%" />
+  <img src="https://raw.githubusercontent.com/zeditya/Odin_RubyOnRails/main/.github/readme/badges.svg?v=e84cf757" alt="Badge: 0 of 8 courses done · 2 days streak · 5 commits · last commit 15 Nov 2026" width="100%" />
 </p>
 
 <p align="center">
   <strong>Currently learning:</strong> Getting started<br />
-  <sub>Last commit: 15 Nov 2026 · 09:28 IST</sub>
+  <sub>Last commit: 15 Nov 2026 · 09:50 IST</sub>
 </p>
 <!--END_SECTION:header-->
 
@@ -51,7 +51,7 @@
 |:---:|:---:|:---:|
 | **2 days** | **2 days** | **2** |
 | Commits | Study hours | Fixes |
-| **4** | **0 h** | **0** |
+| **5** | **0 h** | **0** |
 
 <sub>IST days, with a one-day grace for today. Add `[1h]` to a commit message to count study hours. Fixes are commits containing `fix`.</sub>
 <!--END_SECTION:stats-->
@@ -68,7 +68,7 @@ Wed  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 Thu  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 Fri  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 Sat  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🟩
-Sun  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🟩
+Sun  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜🟨
 ```
 
 <sub>⬜ none · 🟩 1–2 commits · 🟨 3–5 · 🟧 6+ · `·` future · one cell = one IST day</sub>
