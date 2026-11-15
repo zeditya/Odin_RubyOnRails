@@ -12,13 +12,13 @@
 <p align="center">
   <img src="https://img.shields.io/badge/courses-0%2F8-6d28d9?style=flat-square&amp;labelColor=1f2328" alt="Badge: 0 of 8 courses done" />
   <img src="https://img.shields.io/badge/streak-2%20days-2563eb?style=flat-square&amp;labelColor=1f2328" alt="Badge: 2 days current streak" />
-  <img src="https://img.shields.io/badge/commits-3-0f766e?style=flat-square&amp;labelColor=1f2328" alt="Badge: 3 commits in total" />
+  <img src="https://img.shields.io/badge/commits-4-0f766e?style=flat-square&amp;labelColor=1f2328" alt="Badge: 4 commits in total" />
   <img src="https://img.shields.io/badge/last%20commit-15%20Nov%202026-475569?style=flat-square&amp;labelColor=1f2328" alt="Badge: last commit 15 Nov 2026" />
 </p>
 
 <p align="center">
   <strong>Currently learning:</strong> Getting started<br />
-  <sub>Last commit: 15 Nov 2026 · 09:20 IST</sub>
+  <sub>Last commit: 15 Nov 2026 · 09:28 IST</sub>
 </p>
 <!--END_SECTION:header-->
 
@@ -54,7 +54,7 @@
 |:---:|:---:|:---:|
 | **2 days** | **2 days** | **2** |
 | Commits | Study hours | Fixes |
-| **3** | **0 h** | **0** |
+| **4** | **0 h** | **0** |
 
 <sub>IST days, with a one-day grace for today. Add `[1h]` to a commit message to count study hours. Fixes are commits containing `fix`.</sub>
 <!--END_SECTION:stats-->
