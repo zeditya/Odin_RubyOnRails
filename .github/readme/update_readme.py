@@ -1628,7 +1628,8 @@ def heading_errors(name: str, body: str) -> list[str]:
         if len(rows) != len(COURSES):
             errors.append(f"has {len(rows)} course rows, expected {len(COURSES)}")
         for course in COURSES:
-            if str(course["name"]) not in body:
+            name = str(course["name"])
+            if name not in body and md_text(name) not in body:
                 errors.append(f"is missing course {course['name']!r}")
     elif name == "roadmap":
         if not CACHE_BUSTER_RE.search(body):
@@ -1827,11 +1828,9 @@ def validate_readme(
         else:
             errors.append(f"unknown asset {filename!r}")
         version = hashlib.sha256(content.encode("utf-8")).hexdigest()[:8]
-        needle = f'{filename}?v={version}"'
-        if text.count(f"{filename}?v={version}") != 1:
+        src = re.compile(rf'src="[^"]*{re.escape(filename)}\?v={re.escape(version)}"')
+        if len(src.findall(text)) != 1:
             errors.append(f"README must reference {filename} exactly once")
-        if needle not in text:
-            errors.append(f"README {filename} version does not match the file")
 
     return errors
 
@@ -1848,9 +1847,14 @@ def fallback_roadmap_svg(state: State) -> str:
         '  <text x="60" y="60" font-size="24" font-weight="700" fill="#f8fafc">Full Stack Ruby on Rails</text>',
     ]
     for index, course in enumerate(state.courses):
+        y = 110 + index * 42
         lines.append(
-            f'  <text x="60" y="{110 + index * 42}" font-size="18" fill="#cbd5e1">'
-            f"{html_attr(course.name)} · {html_attr(course.status)}</text>"
+            f'  <text x="60" y="{y}" font-size="18" font-weight="700" fill="#cbd5e1">'
+            f"{html_attr(course.name)}</text>"
+        )
+        lines.append(
+            f'  <text x="260" y="{y}" font-size="15" fill="#64748b">'
+            f"{html_attr(course.status)}</text>"
         )
     lines.append("</svg>")
     return "\n".join(lines) + "\n"
@@ -1892,7 +1896,7 @@ def fallback_body(name: str, state: State) -> str:
         ]
         for course in state.courses:
             lines.append(
-                f"| {course.emoji} **{md_text(course.name)}** "
+                f"| [{course.emoji} **{md_text(course.name)}**]({course.top_url}) "
                 "| ⬜ Not started | — | 0% |"
             )
         lines.extend(["", "<sub>Progress is temporarily unavailable.</sub>"])
@@ -1914,7 +1918,9 @@ def fallback_body(name: str, state: State) -> str:
             [
                 "## Activity",
                 "",
-                "_Activity is temporarily unavailable._",
+                "```text",
+                "Activity is temporarily unavailable.",
+                "```",
             ]
         )
     if name == "recent":
