@@ -18,7 +18,6 @@ Python 3 standard library only.
 from __future__ import annotations
 
 import html
-import json
 import os
 import re
 import subprocess
@@ -29,9 +28,7 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Callable
-from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlparse
-from urllib.request import Request, urlopen
+from urllib.parse import quote
 
 # ---------------------------------------------------------------------------
 # CONFIG — edit only this block if the curriculum changes.
@@ -39,9 +36,13 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[2]
 README_FILE = ROOT / "README.md"
-CACHE_FILE = ROOT / ".github" / "readme" / "projects-cache.json"
 
 IST = timezone(timedelta(hours=5, minutes=30))
+
+# Simple, personal heading shown at the top of the README.
+DISPLAY_NAME = "Aditya Bahuguna"
+JOURNEY_TITLE = "Ruby on Rails Journey"
+TAGLINE = "The Odin Project · Learning in public · India (IST)"
 
 # TOP Full Stack Ruby on Rails, in order.
 # aliases = folder names or words in commit messages that point to this course.
@@ -126,12 +127,7 @@ IGNORED_WORK_SUBDIRS = {
     "coverage",
 }
 
-# Project showcase: public repos are discovered from the API.
-MAX_PROJECTS = 6
-PROJECT_EXCLUDE: set[str] = set()  # e.g. {"dotfiles", "old-test-repo"}
-
 MILESTONE_STREAKS = (7, 30, 100)
-MILESTONE_PROJECTS = (1, 3, 5, 10)
 
 BOT_NAMES = {"github-actions", "github-actions[bot]"}
 BOT_EMAILS = {
@@ -146,12 +142,9 @@ SECTION_ORDER = [
     "stats",
     "heatmap",
     "recent",
-    "projects",
     "milestones",
 ]
 
-API_BASE = os.environ.get("GITHUB_API_BASE", "https://api.github.com").rstrip("/")
-API_TIMEOUT = float(os.environ.get("ODIN_API_TIMEOUT", "10"))
 HOURS_RE = re.compile(r"\[(\d+(?:\.\d+)?)\s*h\]", re.IGNORECASE)
 FIX_RE = re.compile(r"\bfix(?:es|ed)?\b", re.IGNORECASE)
 
@@ -210,18 +203,6 @@ def md_text(value: Any) -> str:
 
 def quote_path(path: str) -> str:
     return quote(path, safe="/")
-
-
-def md_url(url: str) -> str:
-    return quote(url, safe=":/?#@!$&'*,;=%")
-
-
-def is_http_url(value: str) -> bool:
-    try:
-        parsed = urlparse(value)
-        return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
-    except ValueError:
-        return False
 
 
 def progress_bar(fraction: float, width: int = 20) -> str:
@@ -407,16 +388,6 @@ class Stats:
 
 
 @dataclass
-class Project:
-    name: str
-    repo_url: str
-    live: str
-    language: str
-    stars: int | None
-    updated: str
-
-
-@dataclass
 class State:
     today: date
     repo_owner: str
@@ -425,8 +396,6 @@ class State:
     courses: list[Course]
     work_folders: list[WorkFolder]
     stats: Stats
-    projects: list[Project]
-    project_count: int
     critical_error: bool = False
 
     @property
@@ -633,159 +602,9 @@ def discover_state(commits: list[Commit], today: date, owner: str, name: str) ->
         courses=courses,
         work_folders=folders,
         stats=stats,
-        projects=[],
-        project_count=0,
     )
 
-# ---------------------------------------------------------------------------
-# PROJECTS — auto-discovered from public GitHub repos
-# ---------------------------------------------------------------------------
-
-
-def load_cache(owner: str) -> list[dict[str, Any]]:
-    try:
-        data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
-    except (FileNotFoundError, OSError, json.JSONDecodeError):
-        return []
-    if not isinstance(data, dict) or data.get("owner") != owner:
-        return []
-    projects = data.get("projects")
-    return [item for item in projects if isinstance(item, dict)] if isinstance(projects, list) else []
-
-
-def save_cache(owner: str, projects: list[dict[str, Any]]) -> None:
-    payload = {"version": 1, "owner": owner, "projects": projects}
-    try:
-        write_atomic(CACHE_FILE, json.dumps(payload, indent=2, sort_keys=True) + "\n")
-    except OSError as exc:
-        warn(f"could not write project cache: {exc}")
-
-
-def fetch_repos(owner: str) -> list[dict[str, Any]]:
-    url = (
-        f"{API_BASE}/users/{quote(owner, safe='')}/repos"
-        "?per_page=100&sort=pushed&direction=desc&type=owner"
-    )
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "odin-learning-readme-bot",
-    }
-    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-
-    try:
-        with urlopen(Request(url, headers=headers), timeout=API_TIMEOUT) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except HTTPError as exc:
-        raise RuntimeError(f"HTTP {exc.code}") from exc
-    except (URLError, TimeoutError, OSError) as exc:
-        raise RuntimeError(str(exc)) from exc
-    except json.JSONDecodeError as exc:
-        raise RuntimeError("invalid JSON") from exc
-
-    if not isinstance(payload, list):
-        raise RuntimeError("unexpected API payload")
-    return [item for item in payload if isinstance(item, dict)]
-
-
-def fmt_iso_date(raw: Any) -> str:
-    if not isinstance(raw, str) or not raw:
-        return "—"
-    try:
-        moment = datetime.fromisoformat(raw.replace("Z", "+00:00"))
-    except ValueError:
-        return "—"
-    return fmt_date(moment.astimezone(IST))
-
-
-def normalize_repo(repo: dict[str, Any]) -> dict[str, Any]:
-    """Turn an API repo, or an already-normalized cache entry, into our shape.
-
-    The output keeps fork/archived/size so the cached copy can be filtered the
-    same way as a fresh API response.
-    """
-    homepage = repo.get("homepage")
-    if not (isinstance(homepage, str) and is_http_url(homepage)):
-        homepage = repo.get("live")
-    live = homepage if isinstance(homepage, str) and is_http_url(homepage) else ""
-
-    stars = repo.get("stargazers_count")
-    if isinstance(stars, bool) or not isinstance(stars, int):
-        stars = repo.get("stars")
-    if isinstance(stars, bool) or not isinstance(stars, int):
-        stars = None
-
-    size = repo.get("size")
-    if isinstance(size, bool) or not isinstance(size, int):
-        size = None
-
-    language = repo.get("language")
-    full_name = str(repo.get("full_name") or "")
-    return {
-        "name": str(repo.get("name") or full_name.split("/")[-1]),
-        "full_name": full_name,
-        "html_url": str(repo.get("html_url") or f"https://github.com/{full_name}"),
-        "live": live,
-        "language": str(language) if language else "",
-        "stars": stars,
-        "pushed_at": repo.get("pushed_at") or repo.get("updated_at") or "",
-        "fork": bool(repo.get("fork")),
-        "archived": bool(repo.get("archived")),
-        "size": size,
-    }
-
-
-def resolve_projects(state: State, offline: bool = False) -> None:
-    owner = state.repo_owner
-    cached = load_cache(owner)
-    fresh: list[dict[str, Any]] | None = None
-
-    if not offline:
-        try:
-            fresh = fetch_repos(owner)
-        except Exception as exc:
-            warn(f"GitHub project API failed: {exc}")
-            if cached:
-                warn("using cached project data")
-
-    raw_projects = fresh if fresh is not None else cached
-    selected: list[dict[str, Any]] = []
-    for repo in raw_projects:
-        if repo.get("fork") or repo.get("archived"):
-            continue
-        name = str(repo.get("name") or "")
-        if not name or name == state.repo_name or name in PROJECT_EXCLUDE:
-            continue
-        if isinstance(repo.get("size"), int) and repo.get("size") == 0:
-            continue
-        selected.append(normalize_repo(repo))
-        if len(selected) >= MAX_PROJECTS:
-            break
-
-    if fresh is not None:
-        # Cache every normalized candidate, not only the visible six, so the
-        # same stable order survives an API outage.
-        cache_items = [normalize_repo(repo) for repo in fresh]
-        if cache_items != cached:
-            save_cache(owner, cache_items)
-
-    state.projects = [
-        Project(
-            name=item["name"],
-            repo_url=item["html_url"],
-            live=item["live"],
-            language=item["language"],
-            stars=item["stars"],
-            updated=fmt_iso_date(item["pushed_at"]),
-        )
-        for item in selected
-    ]
-    state.project_count = len(state.projects)
-
-
-def build_state(offline: bool = False) -> State:
+def build_state() -> State:
     owner, name = detect_repo()
     today = today_ist()
     try:
@@ -800,8 +619,6 @@ def build_state(offline: bool = False) -> State:
             courses=[],
             work_folders=[],
             stats=Stats(0, 0, 0, 0, Decimal("0"), 0, None, Counter()),
-            projects=[],
-            project_count=0,
             critical_error=True,
         )
         return state
@@ -818,13 +635,10 @@ def build_state(offline: bool = False) -> State:
             courses=[],
             work_folders=[],
             stats=Stats(0, 0, 0, 0, Decimal("0"), 0, None, Counter()),
-            projects=[],
-            project_count=0,
             critical_error=True,
         )
         return state
 
-    resolve_projects(state, offline)
     return state
 
 # ---------------------------------------------------------------------------
@@ -837,40 +651,45 @@ def section_header(state: State) -> str:
     total = len(state.courses)
     done = state.courses_done
     last = fmt_date(stats.last_dt)
-    name = state.repo_name
+    title = JOURNEY_TITLE
 
     banner = (
         "https://capsule-render.vercel.app/api?type=waving"
-        "&color=0:6f42c1,100:2ea043&height=170&section=header"
-        f"&text={quote(name)}&fontSize=44&fontColor=ffffff&fontAlignY=40"
-        "&desc=Ruby%20on%20Rails%20%C2%B7%20The%20Odin%20Project"
-        "&descAlignY=62&animation=fadeIn"
+        "&color=0:0f172a,50:6d28d9,100:2563eb&height=180&section=header"
+        f"&text={quote(DISPLAY_NAME)}&fontSize=42&fontColor=ffffff&fontAlignY=50"
+        "&animation=fadeIn"
     )
-    typing = (
-        "https://readme-typing-svg.vercel.app/?font=Fira+Code&weight=600&size=22"
-        "&pause=1000&color=8957E5&center=true&vCenter=true&width=760"
-        "&lines=Learning+Ruby+on+Rails+in+public;"
-        "Commit+code%2C+push%2C+README+updates+itself;"
-        "One+commit+at+a+time+%C2%B7+IST"
-    )
+
+    active = next((course for course in state.courses if course.status == "active"), None)
+    focus = f"{active.emoji} {active.name}" if active else "Getting started"
+
     badges = [
-        (badge_url("courses", f"{done}/{total}", "6f42c1"), f"Badge: {done} of {total} courses done"),
-        (badge_url("projects", str(state.project_count), "2ea043"), f"Badge: {state.project_count} projects"),
-        (badge_url("streak", plural(stats.current_streak, "day"), "db6d28"), f"Badge: {plural(stats.current_streak, 'day')} current streak"),
-        (badge_url("commits", str(stats.total_commits), "0969da"), f"Badge: {plural(stats.total_commits, 'commit')} in total"),
-        (badge_url("last commit", last, "57606a"), f"Badge: last commit {last}"),
+        (
+            badge_url("courses", f"{done}/{total}", "6d28d9"),
+            f"Badge: {done} of {total} courses done",
+        ),
+        (
+            badge_url("streak", plural(stats.current_streak, "day"), "2563eb"),
+            f"Badge: {plural(stats.current_streak, 'day')} current streak",
+        ),
+        (
+            badge_url("commits", str(stats.total_commits), "0f766e"),
+            f"Badge: {plural(stats.total_commits, 'commit')} in total",
+        ),
+        (
+            badge_url("last commit", last, "475569"),
+            f"Badge: last commit {last}",
+        ),
     ]
 
     lines = [
         '<p align="center">',
-        f'  <img src="{html_attr(banner)}" alt="Waving banner for {html_attr(name)}: Ruby on Rails and The Odin Project" width="100%" />',
+        f'  <img src="{html_attr(banner)}" alt="Banner: {html_attr(DISPLAY_NAME)}" width="100%" />',
         "</p>",
         "",
-        f'<h1 align="center">{html.escape(name)} 🛤️</h1>',
+        f'<h1 align="center">{html.escape(title)}</h1>',
         "",
-        '<p align="center">',
-        f'  <img src="{html_attr(typing)}" alt="Animated text: learning Ruby on Rails in public; commit code, push, and the README updates itself." />',
-        "</p>",
+        f'<p align="center"><sub>{html.escape(TAGLINE)}</sub></p>',
         "",
         '<p align="center">',
     ]
@@ -881,11 +700,8 @@ def section_header(state: State) -> str:
             "</p>",
             "",
             '<p align="center">',
-            f"  <sub><strong>{done}/{total} courses</strong> · "
-            f"<strong>{state.project_count} projects</strong> · "
-            f"<strong>{plural(stats.current_streak, 'day')} streak</strong> · "
-            f"<strong>{plural(stats.total_commits, 'commit')}</strong><br />",
-            f"  Last commit: {md_text(fmt_datetime(stats.last_dt))} · no README editing required</sub>",
+            f"  <strong>Currently learning:</strong> {md_text(focus)}<br />",
+            f"  <sub>Last commit: {md_text(fmt_datetime(stats.last_dt))}</sub>",
             "</p>",
         ]
     )
@@ -894,18 +710,18 @@ def section_header(state: State) -> str:
 
 def section_roadmap(state: State) -> str:
     class_for = {"done": "done", "active": "current", "todo": "todo"}
-    lines = ["## 🗺️ Roadmap", "", "```mermaid", "flowchart TD"]
+    lines = ["## Roadmap", "", "```mermaid", "flowchart TD"]
     for course in state.courses:
         node = f"C{course.index + 1:02d}"
-        label = f"{course.emoji} {course.name}".replace('"', "'")
+        label = course.name.replace('"', "'")
         lines.append(f'  {node}["{label}"]')
     for course in state.courses[:-1]:
         lines.append(f"  C{course.index + 1:02d} --> C{course.index + 2:02d}")
     lines.extend(
         [
-            "  classDef done fill:#1a7f37,stroke:#2ea043,color:#ffffff,stroke-width:2px",
-            "  classDef current fill:#9e6a03,stroke:#d29922,color:#ffffff,stroke-width:2px",
-            "  classDef todo fill:#57606a,stroke:#8c959f,color:#ffffff,stroke-width:2px",
+            "  classDef done fill:#166534,stroke:#22c55e,color:#ffffff,stroke-width:2px",
+            "  classDef current fill:#6d28d9,stroke:#a78bfa,color:#ffffff,stroke-width:2px",
+            "  classDef todo fill:#334155,stroke:#64748b,color:#ffffff,stroke-width:2px",
         ]
     )
     for course in state.courses:
@@ -914,11 +730,7 @@ def section_roadmap(state: State) -> str:
         [
             "```",
             "",
-            "<sub>✅ Done · 🚧 Current · ⬜ Not started</sub>",
-            "",
-            "<sub>Order: "
-            + " → ".join(f"{course.index + 1:02d} {course.name}" for course in state.courses)
-            + "</sub>",
+            "<sub>✅ Done · 🚧 In progress · ⬜ Not started</sub>",
         ]
     )
     return "\n".join(lines)
@@ -927,9 +739,9 @@ def section_roadmap(state: State) -> str:
 def section_courses(state: State) -> str:
     labels = {"done": "✅ Done", "active": "🚧 In progress", "todo": "⬜ Not started"}
     lines = [
-        "## 📊 Courses",
+        "## Course Progress",
         "",
-        "| Course | Status | Activity | Progress |",
+        "| Course | Status | Work | Progress |",
         "|:--|:--:|:--|:--|",
     ]
     for course in state.courses:
@@ -941,16 +753,16 @@ def section_courses(state: State) -> str:
         if course.commits:
             commits_word = "commit" if len(course.commits) == 1 else "commits"
             folders_word = "folder" if course.total_folders == 1 else "folders"
-            activity = (
+            work = (
                 f"**{len(course.commits)}** {commits_word} · "
                 f"**{course.total_folders}** {folders_word}"
                 f"<br><sub>last {fmt_date(datetime.fromtimestamp(course.last_ts, IST))}</sub>"
             )
         else:
-            activity = "—"
+            work = "—"
 
         if course.status == "done":
-            progress = f"`{progress_bar(1)}` 100%<br><sub>course complete</sub>"
+            progress = f"`{progress_bar(1)}` 100%<br><sub>complete</sub>"
         elif course.status == "active":
             folder_word = "folder" if course.total_folders == 1 else "folders"
             progress = (
@@ -960,13 +772,13 @@ def section_courses(state: State) -> str:
         else:
             progress = f"`{progress_bar(0)}` 0%"
 
-        lines.append(f"| {name} | {labels[course.status]} | {activity} | {progress} |")
+        lines.append(f"| {name} | {labels[course.status]} | {work} | {progress} |")
 
     lines.extend(
         [
             "",
-            "<sub>No extra files needed. The folder you touched most recently in a course is "
-            "in progress; older folders count as done. Courses before your current course are done.</sub>",
+            "<sub>The newest folder in a course is in progress; older folders count as done. "
+            "Courses before your current course are done.</sub>",
         ]
     )
     return "\n".join(lines)
@@ -976,16 +788,16 @@ def section_stats(state: State) -> str:
     stats = state.stats
     return "\n".join(
         [
-            "## 📈 Stats",
+            "## Stats",
             "",
-            "| 🔥 Current streak | 🏆 Best streak | 📅 Active days |",
+            "| Current streak | Best streak | Active days |",
             "|:---:|:---:|:---:|",
             f"| **{plural(stats.current_streak, 'day')}** | **{plural(stats.best_streak, 'day')}** | **{stats.active_days}** |",
-            "| 💬 Commits | ⏱️ Study hours | 🛠️ Fixes |",
+            "| Commits | Study hours | Fixes |",
             f"| **{stats.total_commits}** | **{fmt_hours(stats.study_hours)} h** | **{stats.fixes}** |",
             "",
-            "<sub>IST days, with a 1-day grace for today. Study hours are optional: put `[1h]` "
-            "in a commit message if you want them counted. Fixes are commits containing `fix`.</sub>",
+            "<sub>IST days, with a one-day grace for today. Add `[1h]` to a commit message "
+            "to count study hours. Fixes are commits containing `fix`.</sub>",
         ]
     )
 
@@ -1009,7 +821,7 @@ def section_heatmap(state: State) -> str:
 
     return "\n".join(
         [
-            "## 🌱 Activity",
+            "## Activity",
             "",
             f"**Last 16 weeks** · {fmt_date(start)} → {fmt_date(today)}",
             "",
@@ -1023,92 +835,50 @@ def section_heatmap(state: State) -> str:
 
 
 def section_recent(state: State) -> str:
-    lines = ["## 🕒 Recently active", ""]
     if not state.work_folders:
-        lines.append("_Push your first code folder and it appears here._")
-        return "\n".join(lines)
+        return "\n".join(
+            [
+                "## Recent Work",
+                "",
+                "_No work folders yet. Push code inside a course folder and it appears here._",
+            ]
+        )
 
+    lines = [
+        "## Recent Work",
+        "",
+        "| Folder | Course | Last updated |",
+        "|:--|:--|--:|",
+    ]
     course_by_key = {course.cfg["key"]: course for course in state.courses}
-    for folder in state.work_folders[:7]:
-        label = folder.rel.split("/")[-1] if "/" in folder.rel else folder.rel
+    for folder in state.work_folders[:8]:
         course = course_by_key.get(folder.course_key or "")
-        suffix = f" · {course.emoji} {md_text(course.name)}" if course else ""
+        course_name = f"{course.emoji} {course.name}" if course else "—"
         when = fmt_date(datetime.fromtimestamp(folder.last_ts, IST))
-        lines.append(f"- 🕒 **[{md_text(label)}]({quote_path(folder.rel)})**{suffix} · {when}")
-    return "\n".join(lines)
-
-
-def section_projects(state: State) -> str:
-    lines = ["## 🚀 Projects", ""]
-    if not state.projects:
         lines.append(
-            "_Public repos appear here automatically. If GitHub's API is down, the last "
-            "good list is kept in `.github/readme/projects-cache.json`._"
+            f"| [{md_text(folder.rel)}]({quote_path(folder.rel)}) "
+            f"| {md_cell(course_name)} | {when} |"
         )
-        return "\n".join(lines)
-
-    language_emoji = {
-        "ruby": "💎",
-        "javascript": "⚡",
-        "typescript": "🔷",
-        "python": "🐍",
-        "html": "🌐",
-        "css": "🎨",
-        "gdscript": "🎮",
-        "c": "🔧",
-        "c++": "🔧",
-    }
-    lines.extend(
-        [
-            "| Project | Language | Stars | Updated |",
-            "|:--|:--:|:--:|:--:|",
-        ]
-    )
-    for project in state.projects:
-        name = f"🚀 **[{md_text(project.name)}]({md_url(project.repo_url)})**"
-        if project.live:
-            name += f" · [Live ↗]({md_url(project.live)})"
-        language = (
-            f"{language_emoji.get(project.language.lower(), '🧩')} {md_cell(project.language)}"
-            if project.language
-            else "—"
-        )
-        stars = f"⭐ {project.stars:,}" if project.stars is not None else "—"
-        lines.append(f"| {name} | {language} | {stars} | {project.updated} |")
-
-    lines.extend(
-        [
-            "",
-            "<sub>Discovered from your public GitHub repos · forks and this repo are skipped · "
-            "edit `PROJECT_EXCLUDE` in the script to hide one.</sub>",
-        ]
-    )
     return "\n".join(lines)
 
 
 def section_milestones(state: State) -> str:
     stats = state.stats
-    lines = ["## 🎯 Milestones", "", "### 🎓 Courses"]
+    lines = ["## Milestones", "", "### Courses"]
     for course in state.courses:
         lines.append(f"- [{'x' if course.status == 'done' else ' '}] {course.emoji} {md_text(course.name)}")
     if all(course.status == "done" for course in state.courses):
-        lines.append("- [x] 🏆 Full Stack Ruby on Rails path complete")
+        lines.append("- [x] Full Stack Ruby on Rails path complete")
 
-    lines.extend(["", "### 🔥 Streaks"])
+    lines.extend(["", "### Streaks"])
     for milestone in MILESTONE_STREAKS:
         lines.append(f"- [{'x' if stats.best_streak >= milestone else ' '}] {milestone}-day streak")
-
-    lines.extend(["", "### 📦 Shipping"])
-    for milestone in MILESTONE_PROJECTS:
-        label = "First project" if milestone == 1 else f"{milestone} projects"
-        lines.append(f"- [{'x' if state.project_count >= milestone else ' '}] {label}")
 
     lines.extend(
         [
             "",
             f"<sub>{state.courses_done}/{len(state.courses)} courses · "
-            f"best streak {plural(stats.best_streak, 'day')} · "
-            f"{state.project_count} projects</sub>",
+            f"best streak {plural(stats.best_streak, 'day')}</sub>",
         ]
     )
     return "\n".join(lines)
@@ -1121,7 +891,6 @@ SECTION_BUILDERS: dict[str, Callable[[State], str]] = {
     "stats": section_stats,
     "heatmap": section_heatmap,
     "recent": section_recent,
-    "projects": section_projects,
     "milestones": section_milestones,
 }
 
@@ -1158,12 +927,6 @@ def scaffold_readme() -> str:
 
 
 def main() -> int:
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Update README from git history.")
-    parser.add_argument("--offline", action="store_true", help="skip the GitHub API")
-    args = parser.parse_args()
-
     if not README_FILE.exists():
         warn("README.md is missing; creating a marker scaffold")
         original = scaffold_readme()
@@ -1176,7 +939,7 @@ def main() -> int:
             return 1
         original = readme
 
-    state = build_state(offline=args.offline)
+    state = build_state()
     if state.critical_error:
         warn("core input failed; keeping every generated section unchanged")
         if README_FILE.exists():

@@ -2,42 +2,39 @@
 
 <!--START_SECTION:header-->
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&amp;color=0:6f42c1,100:2ea043&amp;height=170&amp;section=header&amp;text=Odin_RubyOnRails&amp;fontSize=44&amp;fontColor=ffffff&amp;fontAlignY=40&amp;desc=Ruby%20on%20Rails%20%C2%B7%20The%20Odin%20Project&amp;descAlignY=62&amp;animation=fadeIn" alt="Waving banner for Odin_RubyOnRails: Ruby on Rails and The Odin Project" width="100%" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&amp;color=0:0f172a,50:6d28d9,100:2563eb&amp;height=180&amp;section=header&amp;text=Aditya%20Bahuguna&amp;fontSize=42&amp;fontColor=ffffff&amp;fontAlignY=50&amp;animation=fadeIn" alt="Banner: Aditya Bahuguna" width="100%" />
 </p>
 
-<h1 align="center">Odin_RubyOnRails 🛤️</h1>
+<h1 align="center">Ruby on Rails Journey</h1>
+
+<p align="center"><sub>The Odin Project · Learning in public · India (IST)</sub></p>
 
 <p align="center">
-  <img src="https://readme-typing-svg.vercel.app/?font=Fira+Code&amp;weight=600&amp;size=22&amp;pause=1000&amp;color=8957E5&amp;center=true&amp;vCenter=true&amp;width=760&amp;lines=Learning+Ruby+on+Rails+in+public;Commit+code%2C+push%2C+README+updates+itself;One+commit+at+a+time+%C2%B7+IST" alt="Animated text: learning Ruby on Rails in public; commit code, push, and the README updates itself." />
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/courses-0%2F8-6f42c1?style=flat-square&amp;labelColor=1f2328" alt="Badge: 0 of 8 courses done" />
-  <img src="https://img.shields.io/badge/projects-6-2ea043?style=flat-square&amp;labelColor=1f2328" alt="Badge: 6 projects" />
-  <img src="https://img.shields.io/badge/streak-1%20day-db6d28?style=flat-square&amp;labelColor=1f2328" alt="Badge: 1 day current streak" />
-  <img src="https://img.shields.io/badge/commits-2-0969da?style=flat-square&amp;labelColor=1f2328" alt="Badge: 2 commits in total" />
-  <img src="https://img.shields.io/badge/last%20commit-14%20Nov%202026-57606a?style=flat-square&amp;labelColor=1f2328" alt="Badge: last commit 14 Nov 2026" />
+  <img src="https://img.shields.io/badge/courses-0%2F8-6d28d9?style=flat-square&amp;labelColor=1f2328" alt="Badge: 0 of 8 courses done" />
+  <img src="https://img.shields.io/badge/streak-1%20day-2563eb?style=flat-square&amp;labelColor=1f2328" alt="Badge: 1 day current streak" />
+  <img src="https://img.shields.io/badge/commits-2-0f766e?style=flat-square&amp;labelColor=1f2328" alt="Badge: 2 commits in total" />
+  <img src="https://img.shields.io/badge/last%20commit-14%20Nov%202026-475569?style=flat-square&amp;labelColor=1f2328" alt="Badge: last commit 14 Nov 2026" />
 </p>
 
 <p align="center">
-  <sub><strong>0/8 courses</strong> · <strong>6 projects</strong> · <strong>1 day streak</strong> · <strong>2 commits</strong><br />
-  Last commit: 14 Nov 2026 · 22:46 IST · no README editing required</sub>
+  <strong>Currently learning:</strong> Getting started<br />
+  <sub>Last commit: 14 Nov 2026 · 22:46 IST</sub>
 </p>
 <!--END_SECTION:header-->
 
 <!--START_SECTION:roadmap-->
-## 🗺️ Roadmap
+## Roadmap
 
 ```mermaid
 flowchart TD
-  C01["💎 Ruby"]
-  C02["🎨 Intermediate HTML and CSS"]
-  C03["🗄️ Databases"]
-  C04["🛤️ Ruby on Rails"]
-  C05["✨ Advanced HTML and CSS"]
-  C06["⚡ JavaScript"]
-  C07["⚛️ React"]
-  C08["🤝 Getting Hired"]
+  C01["Ruby"]
+  C02["Intermediate HTML and CSS"]
+  C03["Databases"]
+  C04["Ruby on Rails"]
+  C05["Advanced HTML and CSS"]
+  C06["JavaScript"]
+  C07["React"]
+  C08["Getting Hired"]
   C01 --> C02
   C02 --> C03
   C03 --> C04
@@ -45,9 +42,9 @@ flowchart TD
   C05 --> C06
   C06 --> C07
   C07 --> C08
-  classDef done fill:#1a7f37,stroke:#2ea043,color:#ffffff,stroke-width:2px
-  classDef current fill:#9e6a03,stroke:#d29922,color:#ffffff,stroke-width:2px
-  classDef todo fill:#57606a,stroke:#8c959f,color:#ffffff,stroke-width:2px
+  classDef done fill:#166534,stroke:#22c55e,color:#ffffff,stroke-width:2px
+  classDef current fill:#6d28d9,stroke:#a78bfa,color:#ffffff,stroke-width:2px
+  classDef todo fill:#334155,stroke:#64748b,color:#ffffff,stroke-width:2px
   class C01 todo
   class C02 todo
   class C03 todo
@@ -58,15 +55,13 @@ flowchart TD
   class C08 todo
 ```
 
-<sub>✅ Done · 🚧 Current · ⬜ Not started</sub>
-
-<sub>Order: 01 Ruby → 02 Intermediate HTML and CSS → 03 Databases → 04 Ruby on Rails → 05 Advanced HTML and CSS → 06 JavaScript → 07 React → 08 Getting Hired</sub>
+<sub>✅ Done · 🚧 In progress · ⬜ Not started</sub>
 <!--END_SECTION:roadmap-->
 
 <!--START_SECTION:courses-->
-## 📊 Courses
+## Course Progress
 
-| Course | Status | Activity | Progress |
+| Course | Status | Work | Progress |
 |:--|:--:|:--|:--|
 | [💎 **Ruby**](https://www.theodinproject.com/paths/full-stack-ruby-on-rails/courses/ruby) | ⬜ Not started | — | `░░░░░░░░░░░░░░░░░░░░` 0% |
 | [🎨 **Intermediate HTML and CSS**](https://www.theodinproject.com/paths/full-stack-ruby-on-rails/courses/intermediate-html-and-css) | ⬜ Not started | — | `░░░░░░░░░░░░░░░░░░░░` 0% |
@@ -77,23 +72,23 @@ flowchart TD
 | [⚛️ **React**](https://www.theodinproject.com/paths/full-stack-ruby-on-rails/courses/react) | ⬜ Not started | — | `░░░░░░░░░░░░░░░░░░░░` 0% |
 | [🤝 **Getting Hired**](https://www.theodinproject.com/paths/full-stack-ruby-on-rails/courses/getting-hired) | ⬜ Not started | — | `░░░░░░░░░░░░░░░░░░░░` 0% |
 
-<sub>No extra files needed. The folder you touched most recently in a course is in progress; older folders count as done. Courses before your current course are done.</sub>
+<sub>The newest folder in a course is in progress; older folders count as done. Courses before your current course are done.</sub>
 <!--END_SECTION:courses-->
 
 <!--START_SECTION:stats-->
-## 📈 Stats
+## Stats
 
-| 🔥 Current streak | 🏆 Best streak | 📅 Active days |
+| Current streak | Best streak | Active days |
 |:---:|:---:|:---:|
 | **1 day** | **1 day** | **1** |
-| 💬 Commits | ⏱️ Study hours | 🛠️ Fixes |
+| Commits | Study hours | Fixes |
 | **2** | **0 h** | **0** |
 
-<sub>IST days, with a 1-day grace for today. Study hours are optional: put `[1h]` in a commit message if you want them counted. Fixes are commits containing `fix`.</sub>
+<sub>IST days, with a one-day grace for today. Add `[1h]` to a commit message to count study hours. Fixes are commits containing `fix`.</sub>
 <!--END_SECTION:stats-->
 
 <!--START_SECTION:heatmap-->
-## 🌱 Activity
+## Activity
 
 **Last 16 weeks** · 27 Jul 2026 → 15 Nov 2026
 
@@ -111,30 +106,15 @@ Sun  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 <!--END_SECTION:heatmap-->
 
 <!--START_SECTION:recent-->
-## 🕒 Recently active
+## Recent Work
 
-_Push your first code folder and it appears here._
+_No work folders yet. Push code inside a course folder and it appears here._
 <!--END_SECTION:recent-->
 
-<!--START_SECTION:projects-->
-## 🚀 Projects
-
-| Project | Language | Stars | Updated |
-|:--|:--:|:--:|:--:|
-| 🚀 **[Dsa-cpp](https://github.com/zeditya/Dsa-cpp)** | — | ⭐ 0 | 14 Nov 2026 |
-| 🚀 **[hue-massacre](https://github.com/zeditya/hue-massacre)** | 🎮 GDScript | ⭐ 0 | 21 Oct 2026 |
-| 🚀 **[zeditya](https://github.com/zeditya/zeditya)** | — | ⭐ 1 | 15 Oct 2026 |
-| 🚀 **[DAA-LAB](https://github.com/zeditya/DAA-LAB)** | 🔧 C | ⭐ 0 | 13 Aug 2026 |
-| 🚀 **[WEBSPRINT2026](https://github.com/zeditya/WEBSPRINT2026)** | 🌐 HTML | ⭐ 0 | 8 Jun 2026 |
-| 🚀 **[Food_court_management_system](https://github.com/zeditya/Food_court_management_system)** | 🐍 Python | ⭐ 0 | 4 May 2026 |
-
-<sub>Discovered from your public GitHub repos · forks and this repo are skipped · edit `PROJECT_EXCLUDE` in the script to hide one.</sub>
-<!--END_SECTION:projects-->
-
 <!--START_SECTION:milestones-->
-## 🎯 Milestones
+## Milestones
 
-### 🎓 Courses
+### Courses
 - [ ] 💎 Ruby
 - [ ] 🎨 Intermediate HTML and CSS
 - [ ] 🗄️ Databases
@@ -144,16 +124,10 @@ _Push your first code folder and it appears here._
 - [ ] ⚛️ React
 - [ ] 🤝 Getting Hired
 
-### 🔥 Streaks
+### Streaks
 - [ ] 7-day streak
 - [ ] 30-day streak
 - [ ] 100-day streak
 
-### 📦 Shipping
-- [x] First project
-- [x] 3 projects
-- [x] 5 projects
-- [ ] 10 projects
-
-<sub>0/8 courses · best streak 1 day · 6 projects</sub>
+<sub>0/8 courses · best streak 1 day</sub>
 <!--END_SECTION:milestones-->
