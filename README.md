@@ -12,7 +12,7 @@
 <p align="center">Learning full-stack Ruby on Rails in public, one course at a time.</p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/zeditya/Odin_RubyOnRails/main/.github/readme/badges.svg?v=7d4c652d" alt="Badge: 0 of 8 courses done · 2 days streak · 11 commits · last commit 15 Nov 2026" width="100%" />
+  <img src="https://raw.githubusercontent.com/zeditya/Odin_RubyOnRails/main/.github/readme/badges.svg?v=7ef5ce8f" alt="Badge: 0 of 8 courses done · 0 days streak · 11 commits · last commit 15 Nov 2026" width="100%" />
 </p>
 
 <p align="center">
@@ -69,7 +69,7 @@ Happy building. 🚀
 
 | Current streak | Best streak | Active days |
 |:---:|:---:|:---:|
-| **2 days** | **2 days** | **2** |
+| **0 days** | **2 days** | **2** |
 | Commits | Study hours | Fixes |
 | **11** | **0 h** | **0** |
 
@@ -79,11 +79,11 @@ Happy building. 🚀
 <!--START_SECTION:heatmap-->
 ## Activity
 
-**Last 16 weeks** · 3 Aug 2026 → 16 Nov 2026
+**Last 16 weeks** · 3 Aug 2026 → 17 Nov 2026
 
 ```text
 Mon  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
-Tue  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜·
+Tue  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
 Wed  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜·
 Thu  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜·
 Fri  ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜·
